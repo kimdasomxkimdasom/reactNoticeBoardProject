@@ -1,4 +1,4 @@
-# 리액트 공부 및 깃 테스트
+# REACT STUDY
 
 # Getting Started with Create React App
 
