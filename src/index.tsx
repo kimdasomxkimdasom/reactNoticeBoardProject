@@ -1,19 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import {RecoilRoot} from 'recoil';
+import {App} from './App';
+import {BrowserRouter} from 'react-router-dom';
 
+// index.html div id=root
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
-  <React.StrictMode>
-    <App />
+  // 각 기능 공부 하기 
+  <React.StrictMode>  {/* React 엄격모드 활성화 */}
+    <RecoilRoot>  {/* Recoil 전역상태관리 라이브러리 */}
+        <BrowserRouter> {/* URL경로에 맞게 페이지를 보여주는 컴포넌트 */}
+          <App /> {/* 초기 index page 컴포넌트 */}
+        </BrowserRouter>
+    </RecoilRoot>
   </React.StrictMode>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
