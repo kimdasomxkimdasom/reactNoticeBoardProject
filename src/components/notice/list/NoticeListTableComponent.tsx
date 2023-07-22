@@ -23,12 +23,18 @@ export const NoticeListTableComponent:React.FC = () => {
 
     // 등록 페이지 이동
     const goWrite = () => {
-      alert('이동 !')
+      alert('이동 !');
       navigate('/notice/write');
       /**
        * useNavigate() 를 호출하여, navigate 변수에 할당하고 
        * 버튼을 클릭시 goWrite 함수 실행 -> navigate 함수 사용해 경로로 이동
        */
+    }
+
+    // 상세 페이지 이동
+    const goDetail = (companyNoticeSeq: number) => {
+      alert(`${companyNoticeSeq} 로 이동 !`);
+      navigate(`detail?companyNoticeSeq=${companyNoticeSeq}`);
     }
 
     // https://jsonplaceholder.typicode.com/ 
@@ -59,24 +65,25 @@ export const NoticeListTableComponent:React.FC = () => {
           <thead style={{ fontWeight: 'bold' }}>
             <tr>
               <td width="10%">No</td>
-              <td width="10%">구분</td>
               <td width="50%">제목</td>
               <td width="10%">상단여부</td>
               <td width="10%">등록자</td>
-              <td width="10%">등록일시</td>
+              <td width="20%">등록일시</td>
             </tr>
           </thead>
 
           <tbody>
             {noticeListLength !== 0 ? (
               noticeList.map((item:noticeListType,index: number)=>{
-                const isNoticeTopNm = item.isNoticeTop === 'Y' ? '고정' : '미고정';
+                const isNoticeTopNm = item.isNoticeTop === 'Y' ? '고정' : '미고정'; // 상단여부
+                const companyNoticeSeq = item.companyNoticeSeq;
 
                 return(
                   <tr>
                     <td>{item.no}</td>
-                    <td> - </td>
-                    <td>{item.title}</td>
+                    <td>
+                      <button type='button' onClick={()=>{goDetail(companyNoticeSeq)}}>{item.title}</button>
+                    </td>
                     <td>{isNoticeTopNm}</td>
                     <td>{item.regUserSeq}</td>
                     <td>{item.regDatetime}</td>

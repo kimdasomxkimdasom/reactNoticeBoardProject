@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { selector } from "recoil";
+import { NoticeDetailSeqAtom } from './noticeAtom';
 
 /**
  * Recoil ?
@@ -28,6 +29,42 @@ export const noticeListAPI = selector({
         return response.data;
     },
 });
+
+// NoticeInfoAPI
+export const noticeInfoAPI = selector({
+    key: 'noticeInfoAPI',
+    get: async ({ get }) => {
+
+        const headers = {
+            'x-token': '9BDCAB0E12144F97936BDDF3F7127D76', 
+            'companySeq': '1',
+            'userSeq': '1',
+        };
+
+        const response = await axios.get(`/api/operation-settings/company-notice/${get(NoticeDetailSeqAtom)}`
+            , { headers })
+        return response.data;
+    },
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // NoticeListAPI
 export const noticeListAPITest = selector({
