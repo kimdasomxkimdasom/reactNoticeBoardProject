@@ -1,43 +1,83 @@
-import React, { useEffect } from 'react';
+import axios from 'axios';
+import React, { useEffect, startTransition } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { constSelector, useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValueLoadable } from 'recoil';
 import { NoticeDetailSeqAtom } from '../../../states/noticeAtom';
-//import queryString from 'query-string';
-import {noticeInfoAPI} from '../../../states/noticeSelector';
+import { noticeInfoAPI } from '../../../states/noticeSelector';
 
 // 공지사항 상세 내용 컴포넌트
 export const NoticeDetailContentComponent:React.FC = () => {
     const navigate = useNavigate(); 
 
-    const location = useLocation(); // 현재 url 경로 출력
-    
-    //const querySearch = queryString.parse(location.search).companyNoticeSeq; // 공지사항 리스트에 클릭한 data companyNoticeSeq 값을 출력 ( string )
-    
+    /**
+     * useLocation() : 현재 URL경로, 검색 매개변수, 해수 등 정보 제공
+     */
+    const location = useLocation();
     const params = new URLSearchParams(location.search);
-    const seq = params.get("companyNoticeSeq");
+    const companyNoticeSeq = params.get("companyNoticeSeq");
 
-    console.log(location);
-    console.log(location.search);
-    console.log(seq);
+    const noticeDetail = useRecoilValueLoadable(noticeInfoAPI);
     
-    // 여기서부터 
-    //const noticeDetail = useRecoilValue(noticeInfoAPI);
-    
-    //const [DetailSeq,setDetailSeq] = useRecoilState(NoticeDetailSeqAtom); // NoticeDetailSeqAtom ( noticeAtoms.ts )
+    /**
+     * useRecoilState() : 
+     * 상태(atom)값 읽고 업데이트 하기 위함
+     * Recoil에서 정의한 상태 값을 React 컴포넌트에서 쉽게 사용가능 
+     */
+    const [detailSeq, setDetailSeq] = useRecoilState(NoticeDetailSeqAtom);
 
-    // useEffect(()=>{
-    //     if(typeof seq === 'string'){ // 공지사항 리스트에 클릭한 data companyNoticeSeq 값 string
-    //       setDetailSeq(seq); // NoticeDetailSeqAtom 값 변경
-    //     }
-    //   },[setDetailSeq,seq,DetailSeq]); // setDetailSeq,querySearch,DetailSeq 값이 변경될때마다 재랜더링
+    /**
+     * useEffect() : 데이터 가져오기, 구독(subscription), DOM 직접 조작
+     */
+    useEffect(()=>{
+        if(typeof companyNoticeSeq === 'string'){
+          setDetailSeq(companyNoticeSeq); // NoticeDetailSeqAtom 값 변경
+        }
+    },[setDetailSeq, companyNoticeSeq, detailSeq]); // setDetailSeq, companyNoticeSeq, DetailSeq 값이 변경될때마다 재랜더링
 
+    if (noticeDetail.state === 'loading') { // 로딩 상태
+        return <div>Loading...</div>;
+    }
 
-    // console.log(noticeDetail);
+    if (noticeDetail.state === 'hasError') { // 오류 상태
+        throw noticeDetail.contents;
+    }
+
+    const keywords = noticeDetail.contents.data.companyNoticeInfo.keywords;
+    const joinedKeywords = keywords.join(','); // "1,2,3"
+    const splitKeywords = joinedKeywords.split(','); // ["1", "2", "3"]
+
+    // 파일 다운로드
+    const doDownload = async() =>{
+        const noticeDetailFileNum = noticeDetail.contents.data.companyNoticeInfo.fileList[0].attachedFileSeq;
+        const noticeDetailFileName = noticeDetail.contents.data.companyNoticeInfo.fileList[0].originalFileName;
+
+        try{
+            // 해당 경로의 API get 요청
+            // responseType: 'blob'로 설정 ==> Binary Large Object : 바이너리 데이터
+            const response = await axios.get(`http://192.168.1.60:18040/file/download?attachedFileSeq=${noticeDetailFileNum}&isSelf=false`,{ responseType: 'blob'});
+
+            if(response.status === 200){
+                const url = window.URL.createObjectURL(new Blob([response.data])); // response.data 담은 url 생성
+                const link = document.createElement('a'); // link 상수에 a Element 선언 
+                link.href = url;
+                link.setAttribute('download', noticeDetailFileName); // noticeDetailFileName 이름을 가진 download 속성 값 설정
+                document.body.appendChild(link); // 바디 요소의 끝에 link 생성
+                link.click();
+            } else{
+                return;
+            }
+        }
+            catch(error){
+            console.log(error);
+        }
+
+      }
 
     // 수정페이지 이동
     const goModify = () => {
-        alert('이동 !')
-        navigate('/notice/modify');
+        alert(`${companyNoticeSeq} 로 이동 !`);
+        navigate(`modify?companyNoticeSeq=${companyNoticeSeq}`);
     }
 
     return (
@@ -52,7 +92,7 @@ export const NoticeDetailContentComponent:React.FC = () => {
                     구분
                 </th>
                 <td>
-                    PC웹
+                    {noticeDetail.contents.data.companyNoticeInfo.companyNoticeDivision}
                 </td>
             </tr>
             <tr>
@@ -60,7 +100,7 @@ export const NoticeDetailContentComponent:React.FC = () => {
                     제목
                 </th>
                 <td>
-                    공지사항 제목
+                    {noticeDetail.contents.data.companyNoticeInfo.title}
                 </td>
             </tr>
             <tr>
@@ -68,7 +108,7 @@ export const NoticeDetailContentComponent:React.FC = () => {
                     내용
                 </th>
                 <td>
-                    공지사항 내용
+                    {noticeDetail.contents.data.companyNoticeInfo.content}
                 </td>
             </tr>
             <tr>
@@ -76,7 +116,11 @@ export const NoticeDetailContentComponent:React.FC = () => {
                     전시여부
                 </th>
                 <td>
-                    전시
+                    {noticeDetail.contents.data.companyNoticeInfo.isOpen === 'Y' ? (
+                      <span>전시</span>
+                    ) : (
+                      <span>미전시</span>
+                    )}
                 </td>
             </tr>
             <tr>
@@ -84,42 +128,105 @@ export const NoticeDetailContentComponent:React.FC = () => {
                     상단여부
                 </th>
                 <td>
-                    고정
+                    {noticeDetail.contents.data.companyNoticeInfo.isNoticeTop === 'Y' ? (
+                      <span>상단 전시</span>
+                    ) : (
+                      <span>상단 미전시</span>
+                    )}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    키워드 1
+                </th>
+                <td>
+                    {splitKeywords[0]}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    키워드 2
+                </th>
+                <td>
+                    {splitKeywords[1]}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    키워드 3
+                </th>
+                <td>
+                    {splitKeywords[2]}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    키워드 4
+                </th>
+                <td>
+                    {splitKeywords[3]}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    키워드 5
+                </th>
+                <td>
+                    {splitKeywords[4]}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    파일여부
+                </th>
+                <td>
+                    {noticeDetail.contents.data.companyNoticeInfo.fileList != null ? (
+                      <span>
+                           {noticeDetail.contents.data.companyNoticeInfo.fileList[0].originalFileName}
+                           <button type="button" onClick={doDownload}>파일다운</button>
+                        </span>
+                    ) : (
+                      <span> X </span>
+                    )}
                 </td>
             </tr>
             <tr>
                 <th>
                     등록자(아이디)
                 </th>
+                <td>
+                    {noticeDetail.contents.data.companyNoticeInfo.regUserSeq}
+                </td>
+            </tr>
+            <tr>
                 <th>
                     등록일시
                 </th>
                 <td>
-                    김등록(AEND1234)
-                </td>
-                <td>
-                    2023.08.29 14:45
+                    {noticeDetail.contents.data.companyNoticeInfo.regDatetime}
                 </td>
             </tr>
             <tr>
                 <th>
                     수정자(아이디)
                 </th>
+                <td>
+                    {noticeDetail.contents.data.companyNoticeInfo.modUserSeq}
+                </td>
+            </tr>
+            <tr>
                 <th>
                     수정일시
                 </th>
                 <td>
-                    -
-                </td>
-                <td>
-                    -
+                    {noticeDetail.contents.data.companyNoticeInfo.modDatetime}
                 </td>
             </tr>
           </tbody>
         </table>
       </div>
       <div className='notice-write-btn'>
-        <button type="button" onClick={goModify}>수정하기</button>
+        <button type="submit" onClick={goModify}>수정하기</button>
       </div>
       </>
     )

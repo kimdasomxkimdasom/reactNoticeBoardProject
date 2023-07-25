@@ -41,7 +41,7 @@ export const noticeInfoAPI = selector({
             'userSeq': '1',
         };
 
-        const response = await axios.get(`/api/operation-settings/company-notice/${get(NoticeDetailSeqAtom)}`
+        const response = await axios.get(`http://192.168.1.60:18040/operation-settings/company-notice/${get(NoticeDetailSeqAtom)}`
             , { headers })
         return response.data;
     },

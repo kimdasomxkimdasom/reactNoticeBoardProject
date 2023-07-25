@@ -1,9 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useRecoilValue } from 'recoil';
-import {noticeListAPI} from '../../../states/noticeSelector';
-import {noticeListType} from '../../../types/notice/NoticeType';
+import { noticeListAPI } from '../../../states/noticeSelector';
+import { noticeListType } from '../../../types/notice/NoticeType';
 import axios from 'axios';
+import { useEffect } from 'react';
 
 // 공지사항 리스트 컴포넌트
 export const NoticeListTableComponent:React.FC = () => {
@@ -15,48 +16,23 @@ export const NoticeListTableComponent:React.FC = () => {
      * useNavigate 훅을 사용하면 컴포넌트 내에서 다른 경로로 이동 및 라우팅을 변경할 수 있다.
      */
 
-    const noticeListRes = useRecoilValue(noticeListAPI);    // 공지사항 리스트 API 호출
-    const noticeList = noticeListRes.data.companyNoticeList;    // 공지사항 리스트 API 호출
-    const noticeListLength = noticeListRes.data.totalCount; // 공지사항 리스트 갯수
+    const noticeListRes = useRecoilValue(noticeListAPI);     // 공지사항 리스트 API 호출
+    const noticeList = noticeListRes.data.companyNoticeList; // 공지사항 리스트 API 호출
+    const noticeListLength = noticeListRes.data.totalCount;  // 공지사항 리스트 갯수
     
-    console.log(noticeListRes.data);
-
-    // 등록 페이지 이동
-    const goWrite = () => {
-      alert('이동 !');
-      navigate('/notice/write');
+    const goDetail = (companyNoticeSeq: number) => {    // 상세 페이지 이동
+      alert(`${companyNoticeSeq} 로 이동 !`);
+      navigate(`detail?companyNoticeSeq=${companyNoticeSeq}`);
       /**
        * useNavigate() 를 호출하여, navigate 변수에 할당하고 
        * 버튼을 클릭시 goWrite 함수 실행 -> navigate 함수 사용해 경로로 이동
        */
     }
 
-    // 상세 페이지 이동
-    const goDetail = (companyNoticeSeq: number) => {
-      alert(`${companyNoticeSeq} 로 이동 !`);
-      navigate(`detail?companyNoticeSeq=${companyNoticeSeq}`);
-    }
-
     // https://jsonplaceholder.typicode.com/ 
     // Fake API
 
     // http://192.168.1.60:18040/swagger-ui/index.html#
-
-    // const headers = {
-    //   'x-token': '9BDCAB0E12144F97936BDDF3F7127D76', 
-    //   'companySeq': '1',
-    //   'userSeq': '1',
-    // };
-
-    // axios.get('http://192.168.1.60:18040/operation-settings/company-notices?startPage=1&pageLength=50' , {headers})
-    //   .then(response => {
-    //   // 요청 성공 시 처리
-    //   console.log(response.data);
-    // })
-    //   .catch(error => {
-    //   // 요청 실패 시 처리
-    //   console.error(error);
-    // });
   
     return (
       <>
@@ -74,7 +50,7 @@ export const NoticeListTableComponent:React.FC = () => {
 
           <tbody>
             {noticeListLength !== 0 ? (
-              noticeList.map((item:noticeListType,index: number)=>{
+              noticeList.map((item:noticeListType)=>{
                 const isNoticeTopNm = item.isNoticeTop === 'Y' ? '고정' : '미고정'; // 상단여부
                 const companyNoticeSeq = item.companyNoticeSeq;
 
@@ -100,7 +76,7 @@ export const NoticeListTableComponent:React.FC = () => {
         </table>
       </div>
       <div className='notice-list-write'>
-          <button type='button' onClick={goWrite}>공지 등록</button>
+          <button type='button' onClick={()=>navigate('/notice/write')}>공지 등록</button>
       </div>
       </>
     )

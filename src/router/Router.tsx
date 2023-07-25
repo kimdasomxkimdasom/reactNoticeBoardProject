@@ -16,7 +16,7 @@ export const Router:React.FC = () =>{
             <Route path='' element={<NoticeList />} />
             <Route path='detail' element={<NoticeDetail />} />
             <Route path='write' element={<NoticeWrite />} />
-            <Route path='modify' element={<NoticeModify />} />
+            <Route path='detail/modify' element={<NoticeModify />} />
           </Route>
         </Routes>
       </div>
