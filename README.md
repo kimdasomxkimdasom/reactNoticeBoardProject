@@ -1,2 +1,2 @@
-# Creating a notice board using React for studying
-리액트 공부 공부 공부 💻
+# reactNoticeBoardProject
+리액트 맛보기 공부 프로젝트
